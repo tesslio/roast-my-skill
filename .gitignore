@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# source images (copies live in public/)
+/grandma.png
+/parisian.png
+/senior dorky engineer.png
+
 # debug
 npm-debug.log*
 yarn-debug.log*
