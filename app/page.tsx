@@ -231,7 +231,7 @@ export default function Home() {
                   className="inline-block h-2 w-2"
                   style={{ backgroundColor: "var(--text-muted)", animation: "blink 1s step-end infinite" }}
                 />
-                {selectedPersona === "engineer" && "running diagnostics..."}
+                {selectedPersona === "engineer" && "meditating on your failures..."}
                 {selectedPersona === "grandma" && "grandma is reading..."}
                 {selectedPersona === "parisian" && "preparing contempt..."}
               </div>
