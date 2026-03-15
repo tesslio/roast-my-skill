@@ -233,7 +233,7 @@ export default function Home() {
                 />
                 {selectedPersona === "engineer" && "meditating on your failures..."}
                 {selectedPersona === "grandma" && "grandma is reading..."}
-                {selectedPersona === "parisian" && "preparing contempt..."}
+                {selectedPersona === "parisian" && "sighing audibly..."}
               </div>
             )}
           </div>

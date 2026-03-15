@@ -30,7 +30,7 @@ const PERSONAS: {
   },
   {
     id: "parisian",
-    name: "The Parisian",
+    name: "Parisian Waiter",
     image: "/parisian.png",
     color: "var(--parisian)",
   },

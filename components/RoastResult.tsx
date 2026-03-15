@@ -39,8 +39,8 @@ const PERSONA_STYLE: Record<
   parisian: {
     color: "var(--parisian)",
     image: "/parisian.png",
-    name: "The Parisian",
-    subtitle: "INRIA alumni",
+    name: "Parisian Waiter",
+    subtitle: "Serving contempt since 1987",
   },
 };
 
