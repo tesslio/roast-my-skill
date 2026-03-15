@@ -296,11 +296,86 @@ export default function Home() {
                       Copy roast
                     </button>
                   </div>
+
+                  {/* Share */}
+                  <ShareBar persona={selectedPersona} />
                 </>
               )}
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ShareBar({ persona }: { persona: Persona | null }) {
+  const personaName =
+    persona === "engineer"
+      ? "Disappointed Jedi Dev"
+      : persona === "grandma"
+        ? "Grandma Thinks You Suck"
+        : "Rudest French Waiter Alive";
+
+  const text = encodeURIComponent(
+    `I just got my SKILL.md roasted by "${personaName}" on roast-my-skill \u{1F525}\n\nTry it yourself:`
+  );
+  const url = encodeURIComponent("https://roast-my-skill.vercel.app");
+
+  const channels = [
+    {
+      name: "Twitter",
+      href: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+    },
+    {
+      name: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+    },
+    {
+      name: "Bluesky",
+      href: `https://bsky.app/intent/compose?text=${text}%20${url}`,
+    },
+    {
+      name: "Reddit",
+      href: `https://www.reddit.com/submit?url=${decodeURIComponent(url)}&title=${encodeURIComponent(`I got my SKILL.md roasted by "${personaName}"`)}`,
+    },
+    {
+      name: "HN",
+      href: `https://news.ycombinator.com/submitlink?u=${url}&t=${encodeURIComponent("Roast My Skill – Get your SKILL.md roasted by AI personas")}`,
+    },
+  ];
+
+  return (
+    <div
+      className="animate-fade-up border p-4 text-center"
+      style={{
+        borderColor: "var(--border)",
+        animationDelay: "0.4s",
+        opacity: 0,
+      }}
+    >
+      <p
+        className="mb-3 text-xs uppercase tracking-widest"
+        style={{ color: "var(--text-dim)" }}
+      >
+        Share your roast
+      </p>
+      <div className="flex flex-wrap justify-center gap-2">
+        {channels.map((ch) => (
+          <a
+            key={ch.name}
+            href={ch.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border px-3 py-1.5 text-xs uppercase tracking-wider transition-colors hover:bg-[var(--bg-surface)] hover:text-white"
+            style={{
+              borderColor: "var(--border)",
+              color: "var(--text-muted)",
+            }}
+          >
+            {ch.name}
+          </a>
+        ))}
       </div>
     </div>
   );
