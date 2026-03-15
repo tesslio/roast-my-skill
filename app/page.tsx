@@ -262,10 +262,10 @@ export default function Home() {
                     }}
                   >
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text)" }}>
-                      Full review
+                      Want to fix this?
                     </p>
-                    <p className="mb-3 text-xs" style={{ color: "var(--text-dim)" }}>
-                      Run in your terminal:
+                    <p className="mb-3 text-sm" style={{ color: "var(--text-muted)" }}>
+                      Spin up Claude Code and let Tessl optimize your skill automatically:
                     </p>
                     <TerminalCta />
                   </div>
@@ -308,7 +308,7 @@ export default function Home() {
 
 function TerminalCta() {
   const [copied, setCopied] = useState(false);
-  const command = "npx tessl skill review ./path-to-skill-folder";
+  const command = "npx tessl skill review --optimize ./path-to-skill-folder";
 
   return (
     <div className="flex items-center gap-2">

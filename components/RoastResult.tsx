@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Persona } from "./PersonaPicker";
 
 interface Metrics {
@@ -70,6 +71,7 @@ function ScoreBlocks({ pct }: { pct: number }) {
 function HighlightedMarkdown({ content }: { content: string }) {
   return (
     <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
       components={{
         code: ({ children, className }) => {
           const text = String(children).trim();
