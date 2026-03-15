@@ -27,8 +27,8 @@ const PERSONA_STYLE: Record<
   engineer: {
     color: "var(--engineer)",
     image: "/engineer.png",
-    name: "Enlightened Dev",
-    subtitle: "Has seen the code · Pities you",
+    name: "Dev Colleague",
+    subtitle: "Senior Engineer · Actually helpful",
   },
   grandma: {
     color: "var(--grandma)",

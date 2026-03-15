@@ -18,7 +18,7 @@ const PERSONAS: {
 }[] = [
   {
     id: "engineer",
-    name: "Enlightened Dev",
+    name: "Dev Colleague",
     image: "/engineer.png",
     color: "var(--engineer)",
   },
