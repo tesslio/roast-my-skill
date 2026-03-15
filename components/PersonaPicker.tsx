@@ -18,19 +18,19 @@ const PERSONAS: {
 }[] = [
   {
     id: "engineer",
-    name: "Dev Colleague",
+    name: "Disappointed Jedi Dev",
     image: "/engineer.png",
     color: "var(--engineer)",
   },
   {
     id: "grandma",
-    name: "Grandma",
+    name: "Grandma Thinks You Suck",
     image: "/grandma.png",
     color: "var(--grandma)",
   },
   {
     id: "parisian",
-    name: "Parisian Waiter",
+    name: "Rudest French Waiter",
     image: "/parisian.png",
     color: "var(--parisian)",
   },

@@ -27,20 +27,20 @@ const PERSONA_STYLE: Record<
   engineer: {
     color: "var(--engineer)",
     image: "/engineer.png",
-    name: "Dev Colleague",
-    subtitle: "Senior Engineer · Actually helpful",
+    name: "Disappointed Jedi Dev",
+    subtitle: "I felt a disturbance in your code",
   },
   grandma: {
     color: "var(--grandma)",
     image: "/grandma.png",
-    name: "Grandma",
-    subtitle: "82 yrs young",
+    name: "Grandma Thinks You Suck",
+    subtitle: "Loves you but not your code",
   },
   parisian: {
     color: "var(--parisian)",
     image: "/parisian.png",
-    name: "Parisian Waiter",
-    subtitle: "Serving contempt since 1987",
+    name: "Rudest French Waiter",
+    subtitle: "Alive · Serving contempt since 1987",
   },
 };
 
