@@ -216,48 +216,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* How it works */}
-            <div
-              className="animate-fade-up mt-12 w-full border p-5"
-              style={{
-                borderColor: "var(--border)",
-                animationDelay: "0.5s",
-                opacity: 0,
-              }}
-            >
-              <p
-                className="mb-3 text-xs font-bold uppercase tracking-widest"
-                style={{ color: "var(--text-dim)" }}
-              >
-                How it works
-              </p>
-              <div className="space-y-2 text-xs" style={{ color: "var(--text-muted)" }}>
-                <div className="flex gap-3">
-                  <span style={{ color: "var(--text-dim)" }}>1.</span>
-                  <span>
-                    Paste your SKILL.md content or share a GitHub link — everything runs{" "}
-                    <span style={{ color: "var(--text)" }}>server-side</span>. Nothing is installed locally.
-                  </span>
-                </div>
-                <div className="flex gap-3">
-                  <span style={{ color: "var(--text-dim)" }}>2.</span>
-                  <span>
-                    Your skill is analyzed across{" "}
-                    <span style={{ color: "var(--text)" }}>Validation</span>,{" "}
-                    <span style={{ color: "var(--text)" }}>Discovery</span>, and{" "}
-                    <span style={{ color: "var(--text)" }}>Implementation</span>{" "}
-                    dimensions using Tessl&apos;s review criteria.
-                  </span>
-                </div>
-                <div className="flex gap-3">
-                  <span style={{ color: "var(--text-dim)" }}>3.</span>
-                  <span>
-                    Pick a character — the technical review gets rewritten in their voice.
-                    Same substance, different delivery.
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
