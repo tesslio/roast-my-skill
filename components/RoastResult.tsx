@@ -29,7 +29,7 @@ const PERSONA_STYLE: Record<
   engineer: {
     color: "var(--engineer)",
     image: "/engineer.png",
-    name: "Disappointed Jedi Dev",
+    name: "Condescending Jedi Dev",
     subtitle: "I felt a disturbance in your code",
   },
   grandma: {

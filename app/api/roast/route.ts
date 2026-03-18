@@ -3,8 +3,6 @@ import { fetchSkillFromGitHub, isGitHubUrl } from "@/lib/github";
 import { runTesslReview } from "@/lib/tessl";
 import { rateLimit } from "@/lib/rate-limit";
 
-const MAX_PASTE_SIZE = 50 * 1024;
-
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
   if (!rateLimit(ip)) {
@@ -21,31 +19,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { type, content } = body;
+  const { content } = body;
   if (!content || typeof content !== "string") {
     return NextResponse.json({ error: "Missing content." }, { status: 400 });
   }
 
-  let skillContent: string;
+  if (!isGitHubUrl(content)) {
+    return NextResponse.json(
+      { error: "Please provide a valid GitHub URL." },
+      { status: 400 }
+    );
+  }
 
   try {
-    if (type === "url") {
-      if (!isGitHubUrl(content)) {
-        return NextResponse.json(
-          { error: "Please provide a valid GitHub URL." },
-          { status: 400 }
-        );
-      }
-      skillContent = await fetchSkillFromGitHub(content);
-    } else {
-      if (content.length > MAX_PASTE_SIZE) {
-        return NextResponse.json({ error: "Content too large (max 50KB)." }, { status: 400 });
-      }
-      skillContent = content;
+    // Check for multiple skill files (repo root URL)
+    const result = await fetchSkillFromGitHub(content);
+
+    if (result.skillFiles) {
+      return NextResponse.json({
+        type: "pick",
+        skillFiles: result.skillFiles,
+      });
     }
 
-    const review = await runTesslReview(skillContent);
+    // Run real Tessl review via microservice (falls back to Claude API)
+    const review = await runTesslReview(content, result.content);
     return NextResponse.json({
+      type: "review",
       review: review.raw,
       metrics: review.metrics,
     });
