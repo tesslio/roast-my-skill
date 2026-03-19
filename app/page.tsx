@@ -95,9 +95,14 @@ export default function Home() {
     reviewRef.current = null;
     pendingPersonaRef.current = null;
 
-    // For URLs (first time), show loading to check for multiple skill files
-    // For paste or after file pick, show persona picker immediately
-    setPhase(type === "url" && !skipLoading ? "loading" : "picking");
+    // Show "Analyzing skill..." briefly, then persona picker while review runs in background
+    setPhase("loading");
+
+    // Auto-transition to persona picker after 3 seconds (unless file picker needed)
+    const loadingTimer = setTimeout(() => {
+      // Only transition if still in loading phase (not switched to picking-file)
+      setPhase((prev) => (prev === "loading" ? "picking" : prev));
+    }, 3000);
 
     try {
       const res = await fetch("/api/roast", {
@@ -114,7 +119,7 @@ export default function Home() {
       const data = await res.json();
 
       if (data.type === "pick") {
-        // Multiple SKILL.md files — let user pick
+        clearTimeout(loadingTimer);
         setSkillFiles(data.skillFiles);
         setPhase("picking-file");
         return;
@@ -125,24 +130,22 @@ export default function Home() {
       setRawReview(data.review ?? null);
       setReviewReady(true);
 
-      // If we were in loading phase (URL first submit), now show persona picker
-      if (type === "url" && !skipLoading) {
-        setPhase("picking");
-      }
+      // If still on loading screen (review came back fast), go to persona picker
+      setPhase((prev) => (prev === "loading" ? "picking" : prev));
 
-      // If user already picked a persona while review was running (paste flow)
+      // If user already picked a persona while review was running
       if (pendingPersonaRef.current) {
         startRewrite(data.review, pendingPersonaRef.current);
       }
     } catch (err) {
+      clearTimeout(loadingTimer);
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setPhase("landing");
     }
   };
 
   const handleFilePick = (url: string) => {
-    // We already know it's a single file — go straight to persona picker
-    handleSubmit("url", url, true);
+    handleSubmit("url", url);
   };
 
   const handlePersonaPick = (persona: Persona) => {
@@ -616,16 +619,21 @@ function WaitingScreen({ persona }: { persona: Persona }) {
           )}
         </div>
 
-        {/* Hang tight message */}
+        {/* In-character "hang tight" message */}
         {showHangTight && (
           <div
-            className="animate-fade-up border px-4 py-3 text-center text-xs"
+            className="animate-fade-up border-l-2 pl-4 text-sm italic"
             style={{
-              borderColor: "var(--border)",
-              color: "var(--text-dim)",
+              borderColor: style.color,
+              color: style.color,
             }}
           >
-            Tessl is running a deep review with AI judges — this takes about 60 seconds. Hang tight.
+            {persona === "engineer" &&
+              "The Council's judges require about 60 more seconds, young padawan. The Force cannot be rushed."}
+            {persona === "grandma" &&
+              "Sweetheart, grandma's AI friends need about 60 more seconds to finish reading this. Be patient, baby."}
+            {persona === "parisian" &&
+              "The judges require another 60 seconds. A proper Michelin review is never rushed, even for... this."}
           </div>
         )}
       </div>
