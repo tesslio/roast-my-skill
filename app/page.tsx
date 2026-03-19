@@ -22,14 +22,6 @@ interface Metrics {
   securityRating: string | null;
 }
 
-const ASCII_TITLE = `
-██████╗  ██████╗  █████╗ ███████╗████████╗
-██╔══██╗██╔═══██╗██╔══██╗██╔════╝╚══██╔══╝
-██████╔╝██║   ██║███████║███████╗   ██║
-██╔══██╗██║   ██║██╔══██║╚════██║   ██║
-██║  ██║╚██████╔╝██║  ██║███████║   ██║
-╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝   ╚═╝
-`.trim();
 
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("landing");
@@ -177,64 +169,46 @@ export default function Home() {
         {/* ===== LANDING ===== */}
         {phase === "landing" && (
           <div className="flex min-h-screen flex-col items-center justify-center pb-16">
-            {/* Title with fire */}
-            <div
-              className="animate-fade-up flex items-center justify-center gap-4"
-              style={{ animationDelay: "0.05s", opacity: 0 }}
-            >
-              <Image
-                src="/fire.jpg"
-                alt="Fire"
-                width={80}
-                height={80}
-                className="hidden sm:block"
-                style={{ objectFit: "contain" }}
-              />
-              <pre
-                className="select-none text-center text-[0.45rem] leading-[1.1] sm:text-[0.55rem] md:text-xs"
-                style={{ color: "var(--text)" }}
-              >
-                {ASCII_TITLE}
-              </pre>
-              <Image
-                src="/fire.jpg"
-                alt="Fire"
-                width={80}
-                height={80}
-                className="hidden sm:block"
-                style={{ objectFit: "contain", transform: "scaleX(-1)" }}
-              />
-            </div>
-
-            {/* Subtitle */}
+            {/* Label */}
             <p
-              className="animate-fade-up mt-4 text-center text-sm tracking-widest uppercase"
+              className="animate-fade-up text-xs font-medium uppercase tracking-widest"
               style={{
-                color: "var(--text-dim)",
-                animationDelay: "0.15s",
+                color: "var(--engineer)",
+                animationDelay: "0.05s",
                 opacity: 0,
-                letterSpacing: "0.2em",
+                letterSpacing: "0.15em",
+                fontFamily: "var(--font-mono), monospace",
               }}
             >
-              my-skill
+              Via GitHub
             </p>
 
-            {/* Divider */}
-            <div
-              className="animate-fade-up my-8 h-px w-full max-w-md"
+            {/* Title */}
+            <h1
+              className="animate-fade-up mt-3 flex items-center gap-4 text-4xl font-normal sm:text-5xl"
               style={{
-                background: "var(--border)",
-                animationDelay: "0.2s",
+                color: "var(--text)",
+                animationDelay: "0.1s",
                 opacity: 0,
+                fontFamily: "var(--font-dm), system-ui, sans-serif",
               }}
-            />
+            >
+              <Image
+                src="/fire.jpg"
+                alt="Fire"
+                width={48}
+                height={48}
+                style={{ objectFit: "contain" }}
+              />
+              Roast my skill
+            </h1>
 
             {/* Description */}
             <p
-              className="animate-fade-up text-center text-sm"
+              className="animate-fade-up mt-4 text-center text-sm"
               style={{
                 color: "var(--text-muted)",
-                animationDelay: "0.25s",
+                animationDelay: "0.2s",
                 opacity: 0,
               }}
             >
