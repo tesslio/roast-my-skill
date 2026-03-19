@@ -182,39 +182,46 @@ export default function Home() {
         {/* ===== LANDING ===== */}
         {phase === "landing" && (
           <div className="flex min-h-screen flex-col items-center justify-center pb-16">
-            {/* Label */}
-            <p
-              className="animate-fade-up text-xs font-medium uppercase tracking-widest"
-              style={{
-                color: "var(--engineer)",
-                animationDelay: "0.05s",
-                opacity: 0,
-                letterSpacing: "0.15em",
-                fontFamily: "var(--font-mono), monospace",
-              }}
-            >
-              Via GitHub
-            </p>
-
             {/* Title */}
-            <h1
-              className="animate-fade-up mt-3 flex items-center gap-4 text-4xl font-normal sm:text-5xl"
-              style={{
-                color: "var(--text)",
-                animationDelay: "0.1s",
-                opacity: 0,
-                fontFamily: "var(--font-dm), system-ui, sans-serif",
-              }}
+            <div
+              className="animate-fade-up flex flex-col items-center"
+              style={{ animationDelay: "0.05s", opacity: 0 }}
             >
-              <Image
-                src="/fire.jpg"
-                alt="Fire"
-                width={48}
-                height={48}
-                style={{ objectFit: "contain" }}
-              />
-              Roast my skill
-            </h1>
+              <div className="flex items-center gap-3 sm:gap-5">
+                <Image
+                  src="/fire.jpg"
+                  alt="Fire"
+                  width={56}
+                  height={56}
+                  style={{ objectFit: "contain" }}
+                />
+                <h1
+                  className="text-5xl font-bold uppercase tracking-wider sm:text-6xl"
+                  style={{
+                    color: "var(--text)",
+                    fontFamily: "var(--font-dm), system-ui, sans-serif",
+                  }}
+                >
+                  ROAST
+                </h1>
+                <Image
+                  src="/fire.jpg"
+                  alt="Fire"
+                  width={56}
+                  height={56}
+                  style={{ objectFit: "contain", transform: "scaleX(-1)" }}
+                />
+              </div>
+              <p
+                className="mt-1 text-lg tracking-widest sm:text-xl"
+                style={{
+                  color: "var(--engineer)",
+                  fontFamily: "var(--font-mono), monospace",
+                }}
+              >
+                my skill
+              </p>
+            </div>
 
             {/* Description */}
             <p
