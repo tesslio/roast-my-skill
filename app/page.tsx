@@ -35,6 +35,7 @@ export default function Home() {
 
   const reviewRef = useRef<string | null>(null);
   const pendingPersonaRef = useRef<Persona | null>(null);
+  const waitingStartRef = useRef<number>(0);
 
   const startRewrite = useCallback(
     async (review: string, persona: Persona) => {
@@ -127,7 +128,13 @@ export default function Home() {
 
       // If user already picked a persona while review was running
       if (pendingPersonaRef.current) {
-        startRewrite(data.review, pendingPersonaRef.current);
+        // Let the banter play for at least 12 seconds before transitioning
+        const elapsed = Date.now() - waitingStartRef.current;
+        const minWait = 12000;
+        const delay = Math.max(0, minWait - elapsed);
+        setTimeout(() => {
+          startRewrite(data.review, pendingPersonaRef.current!);
+        }, delay);
       }
     } catch (err) {
       clearTimeout(loadingTimer);
@@ -143,9 +150,15 @@ export default function Home() {
   const handlePersonaPick = (persona: Persona) => {
     setSelectedPersona(persona);
     if (reviewRef.current) {
-      startRewrite(reviewRef.current, persona);
+      // Review already ready — still show banter for a few seconds
+      setPhase("waiting");
+      waitingStartRef.current = Date.now();
+      setTimeout(() => {
+        startRewrite(reviewRef.current!, persona);
+      }, 12000);
     } else {
       pendingPersonaRef.current = persona;
+      waitingStartRef.current = Date.now();
       setPhase("waiting");
     }
   };

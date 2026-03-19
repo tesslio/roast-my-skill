@@ -64,7 +64,7 @@ function mapTesslMetrics(data: TesslCliOutput): TesslMetrics {
   );
 
   return {
-    validation: Math.round((passed / total) * 100),
+    validation: Math.floor((passed / total) * 100),
     discovery: Math.round((data.descriptionJudge?.normalizedScore ?? 0) * 100),
     implementation: Math.round((data.contentJudge?.normalizedScore ?? 0) * 100),
     finalScore: data.review?.reviewScore ?? null,
