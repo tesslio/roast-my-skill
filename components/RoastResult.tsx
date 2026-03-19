@@ -20,11 +20,12 @@ interface RoastResultProps {
   persona: Persona | null;
   metrics: Metrics | null;
   rawReview: string | null;
+  customName?: string;
 }
 
 const PERSONA_STYLE: Record<
   string,
-  { color: string; image: string; name: string; subtitle: string }
+  { color: string; image: string | null; name: string; subtitle: string }
 > = {
   engineer: {
     color: "var(--engineer)",
@@ -43,6 +44,12 @@ const PERSONA_STYLE: Record<
     image: "/parisian.png",
     name: "Rudest French Waiter",
     subtitle: "Alive · Serving contempt since 1987",
+  },
+  custom: {
+    color: "var(--custom)",
+    image: null,
+    name: "Custom Roaster",
+    subtitle: "Your creation",
   },
 };
 
@@ -67,6 +74,13 @@ const MOOD_EMOJIS: Record<string, Record<string, string>> = {
     angry: "🤬",
     shocked: "😤",
     hopeful: "🙄",
+  },
+  custom: {
+    pleased: "😄",
+    disappointed: "😕",
+    angry: "😠",
+    shocked: "😲",
+    hopeful: "🤞",
   },
 };
 
@@ -110,13 +124,19 @@ function MoodReaction({
         className="relative h-7 w-7 shrink-0 overflow-hidden border"
         style={{ borderColor: style.color }}
       >
-        <Image
-          src={style.image}
-          alt={mood}
-          fill
-          className="object-cover"
-          sizes="28px"
-        />
+        {style.image ? (
+          <Image
+            src={style.image}
+            alt={mood}
+            fill
+            className="object-cover"
+            sizes="28px"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: "var(--bg-elevated)" }}>
+            <span className="text-xs font-bold" style={{ color: style.color, fontFamily: "var(--font-mono), monospace" }}>?</span>
+          </div>
+        )}
       </div>
       <span className="text-lg">{emoji}</span>
     </div>
@@ -217,6 +237,7 @@ export default function RoastResult({
   persona,
   metrics,
   rawReview,
+  customName,
 }: RoastResultProps) {
   const [showRaw, setShowRaw] = useState(false);
 
@@ -365,23 +386,29 @@ export default function RoastResult({
             className="relative h-8 w-8 shrink-0 overflow-hidden border"
             style={{ borderColor: style.color }}
           >
-            <Image
-              src={style.image}
-              alt={style.name}
-              fill
-              className="object-cover"
-              sizes="32px"
-            />
+            {style.image ? (
+              <Image
+                src={style.image}
+                alt={customName || style.name}
+                fill
+                className="object-cover"
+                sizes="32px"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: "var(--bg-elevated)" }}>
+                <span className="text-sm font-bold" style={{ color: style.color, fontFamily: "var(--font-mono), monospace" }}>?</span>
+              </div>
+            )}
           </div>
           <div>
             <p
               className="text-xs font-bold uppercase tracking-wider"
               style={{ color: style.color }}
             >
-              {style.name}
+              {customName || style.name}
             </p>
             <p className="text-[10px]" style={{ color: "var(--text-dim)" }}>
-              {style.subtitle}
+              {customName ? "Custom roaster" : style.subtitle}
             </p>
           </div>
         </div>

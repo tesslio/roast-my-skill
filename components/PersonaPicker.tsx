@@ -3,17 +3,17 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export type Persona = "engineer" | "grandma" | "parisian";
+export type Persona = "engineer" | "grandma" | "parisian" | "custom";
 
 interface PersonaPickerProps {
-  onPick: (persona: Persona) => void;
+  onPick: (persona: Persona, customDescription?: string) => void;
   reviewReady: boolean;
 }
 
 const PERSONAS: {
   id: Persona;
   name: string;
-  image: string;
+  image: string | null;
   color: string;
 }[] = [
   {
@@ -34,6 +34,12 @@ const PERSONAS: {
     image: "/parisian.png",
     color: "var(--parisian)",
   },
+  {
+    id: "custom",
+    name: "Create Your Own",
+    image: null,
+    color: "var(--custom)",
+  },
 ];
 
 export default function PersonaPicker({
@@ -42,11 +48,27 @@ export default function PersonaPicker({
 }: PersonaPickerProps) {
   const [selectedId, setSelectedId] = useState<Persona | null>(null);
   const [hoveredId, setHoveredId] = useState<Persona | null>(null);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customDesc, setCustomDesc] = useState("");
 
   const handleClick = (id: Persona) => {
     if (selectedId) return;
+
+    if (id === "custom") {
+      setShowCustomInput(true);
+      return;
+    }
+
     setSelectedId(id);
     onPick(id);
+  };
+
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customDesc.trim()) return;
+    setSelectedId("custom");
+    setShowCustomInput(false);
+    onPick("custom", customDesc.trim().slice(0, 200));
   };
 
   return (
@@ -75,17 +97,18 @@ export default function PersonaPicker({
             </span>
           ) : !selectedId ? (
             <span className="animate-fade-in text-xs" style={{ color: "var(--engineer)" }}>
-              ✓ analysis complete — pick a persona
+              analysis complete — pick a persona
             </span>
           ) : null}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
         {PERSONAS.map((persona, i) => {
           const isSelected = selectedId === persona.id;
           const isDimmed = selectedId !== null && !isSelected;
           const isHovered = hoveredId === persona.id && !selectedId;
+          const isCustomActive = showCustomInput && persona.id === "custom";
 
           return (
             <button
@@ -101,36 +124,47 @@ export default function PersonaPicker({
                 animation: `fadeUp 0.3s ease-out ${i * 0.08}s forwards`,
               }}
             >
-              {/* Image */}
               <div
                 className="relative aspect-square w-full overflow-hidden border-2 transition-all duration-200"
                 style={{
-                  borderColor: isSelected || isHovered
+                  borderColor: isSelected || isHovered || isCustomActive
                     ? persona.color
                     : "var(--border)",
                   filter: isDimmed ? "brightness(0.25) grayscale(1)" : "none",
                 }}
               >
-                <Image
-                  src={persona.image}
-                  alt={persona.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 33vw, 200px"
-                />
+                {persona.image ? (
+                  <Image
+                    src={persona.image}
+                    alt={persona.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 150px"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: "var(--bg-elevated)" }}>
+                    <span
+                      className="text-4xl font-bold sm:text-5xl"
+                      style={{
+                        color: isSelected || isHovered || isCustomActive ? persona.color : "var(--text-dim)",
+                        fontFamily: "var(--font-mono), monospace",
+                      }}
+                    >
+                      ?
+                    </span>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                {/* Name overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-2">
                   <p
                     className="text-xs font-bold uppercase tracking-wider"
-                    style={{ color: isSelected || isHovered ? persona.color : "var(--text)" }}
+                    style={{ color: isSelected || isHovered || isCustomActive ? persona.color : "var(--text)" }}
                   >
                     {persona.name}
                   </p>
                 </div>
 
-                {/* Selected state */}
                 {isSelected && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                     <span
@@ -147,6 +181,42 @@ export default function PersonaPicker({
           );
         })}
       </div>
+
+      {/* Custom persona input */}
+      {showCustomInput && !selectedId && (
+        <form
+          onSubmit={handleCustomSubmit}
+          className="animate-fade-up mt-4 flex gap-2"
+        >
+          <input
+            type="text"
+            value={customDesc}
+            onChange={(e) => setCustomDesc(e.target.value)}
+            placeholder="e.g. Gordon Ramsay, my disappointed dad, a pirate captain..."
+            maxLength={200}
+            autoFocus
+            className="flex-1 border px-3 py-2.5 text-sm outline-none placeholder:text-[var(--text-dim)]"
+            style={{
+              borderColor: "var(--custom)",
+              backgroundColor: "var(--bg-elevated)",
+              color: "var(--text)",
+              fontFamily: "var(--font-mono), monospace",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!customDesc.trim()}
+            className="border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors hover:opacity-80 disabled:opacity-30"
+            style={{
+              borderColor: "var(--custom)",
+              backgroundColor: "var(--custom)",
+              color: "var(--bg)",
+            }}
+          >
+            Go
+          </button>
+        </form>
+      )}
     </div>
   );
 }

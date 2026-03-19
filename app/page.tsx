@@ -32,10 +32,12 @@ export default function Home() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [rawReview, setRawReview] = useState<string | null>(null);
   const [skillFiles, setSkillFiles] = useState<SkillFile[]>([]);
+  const [customDescription, setCustomDescription] = useState<string | null>(null);
 
   const reviewRef = useRef<string | null>(null);
   const pendingPersonaRef = useRef<Persona | null>(null);
   const waitingStartRef = useRef<number>(0);
+  const customDescRef = useRef<string | null>(null);
 
   const startRewrite = useCallback(
     async (review: string, persona: Persona) => {
@@ -46,7 +48,7 @@ export default function Home() {
         const res = await fetch("/api/roast/rewrite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ review, persona }),
+          body: JSON.stringify({ review, persona, customDescription: customDescRef.current }),
         });
 
         if (!res.ok) {
@@ -147,10 +149,13 @@ export default function Home() {
     handleSubmit("url", url);
   };
 
-  const handlePersonaPick = (persona: Persona) => {
+  const handlePersonaPick = (persona: Persona, customDesc?: string) => {
     setSelectedPersona(persona);
+    if (customDesc) {
+      setCustomDescription(customDesc);
+      customDescRef.current = customDesc;
+    }
     if (reviewRef.current) {
-      // Review already ready — still show banter for a few seconds
       setPhase("waiting");
       waitingStartRef.current = Date.now();
       setTimeout(() => {
@@ -172,8 +177,10 @@ export default function Home() {
     setMetrics(null);
     setRawReview(null);
     setSkillFiles([]);
+    setCustomDescription(null);
     reviewRef.current = null;
     pendingPersonaRef.current = null;
+    customDescRef.current = null;
   };
 
   return (
@@ -307,7 +314,7 @@ export default function Home() {
 
         {/* ===== WAITING ===== */}
         {phase === "waiting" && selectedPersona && (
-          <WaitingScreen persona={selectedPersona} />
+          <WaitingScreen persona={selectedPersona} customDescription={customDescription} />
         )}
 
         {/* ===== RESULT ===== */}
@@ -320,6 +327,7 @@ export default function Home() {
                 persona={selectedPersona}
                 metrics={metrics}
                 rawReview={rawReview}
+                customName={customDescription ?? undefined}
               />
 
               {phase === "done" && result && (
@@ -370,7 +378,7 @@ export default function Home() {
                   </div>
 
                   {/* Share */}
-                  <ShareBar persona={selectedPersona} metrics={metrics} roastText={result} />
+                  <ShareBar persona={selectedPersona} metrics={metrics} roastText={result} customName={customDescription ?? undefined} />
                 </>
               )}
             </div>
@@ -381,13 +389,15 @@ export default function Home() {
   );
 }
 
-function ShareBar({ persona, metrics, roastText }: { persona: Persona | null; metrics: Metrics | null; roastText: string }) {
+function ShareBar({ persona, metrics, roastText, customName }: { persona: Persona | null; metrics: Metrics | null; roastText: string; customName?: string }) {
   const personaName =
-    persona === "engineer"
-      ? "Condescending Jedi Dev"
-      : persona === "grandma"
-        ? "Grandma Thinks You Suck"
-        : "Rudest French Waiter Alive";
+    persona === "custom" && customName
+      ? customName
+      : persona === "engineer"
+        ? "Condescending Jedi Dev"
+        : persona === "grandma"
+          ? "Grandma Thinks You Suck"
+          : "Rudest French Waiter Alive";
 
   // Extract a funny one-liner from the roast for sharing
   const lines = roastText.split("\n").filter(l => l.trim().length > 20 && !l.startsWith("#") && !l.startsWith("|") && !l.startsWith("-") && !l.includes("::mood:"));
@@ -513,17 +523,28 @@ const WAITING_LINES: Record<string, string[]> = {
     "Patience. A proper critique cannot be rushed.",
     "Almost ready. My contempt needs time to marinate.",
   ],
+  custom: [
+    "Getting into character...",
+    "Reading through your skill file now...",
+    "Oh, this is going to be interesting.",
+    "Forming some strong opinions here...",
+    "I have thoughts. Many thoughts.",
+    "This is... something. Definitely something.",
+    "Almost ready to deliver the verdict.",
+    "Preparing my most devastating lines...",
+  ],
 };
 
-function WaitingScreen({ persona }: { persona: Persona }) {
+function WaitingScreen({ persona, customDescription }: { persona: Persona; customDescription?: string | null }) {
   const [visibleLines, setVisibleLines] = useState<number>(1);
   const [showHangTight, setShowHangTight] = useState(false);
   const lines = WAITING_LINES[persona] ?? WAITING_LINES.engineer;
 
-  const personaStyle: Record<string, { color: string; image: string; name: string }> = {
+  const personaStyle: Record<string, { color: string; image: string | null; name: string }> = {
     engineer: { color: "var(--engineer)", image: "/engineer.png", name: "Condescending Jedi Dev" },
     grandma: { color: "var(--grandma)", image: "/grandma.png", name: "Grandma Thinks You Suck" },
     parisian: { color: "var(--parisian)", image: "/parisian.png", name: "Rudest French Waiter" },
+    custom: { color: "var(--custom)", image: null, name: customDescription ?? "Custom Roaster" },
   };
 
   const style = personaStyle[persona];
@@ -558,13 +579,19 @@ function WaitingScreen({ persona }: { persona: Persona }) {
             className="relative h-16 w-16 shrink-0 overflow-hidden border-2"
             style={{ borderColor: style.color }}
           >
-            <Image
-              src={style.image}
-              alt={style.name}
-              fill
-              className="object-cover"
-              sizes="64px"
-            />
+            {style.image ? (
+              <Image
+                src={style.image}
+                alt={style.name}
+                fill
+                className="object-cover"
+                sizes="64px"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: "var(--bg-elevated)" }}>
+                <span className="text-2xl font-bold" style={{ color: style.color, fontFamily: "var(--font-mono), monospace" }}>?</span>
+              </div>
+            )}
           </div>
           <div>
             <p
@@ -628,6 +655,8 @@ function WaitingScreen({ persona }: { persona: Persona }) {
               "Sweetheart, grandma's AI friends need about 60 more seconds to finish reading this. Be patient, baby."}
             {persona === "parisian" &&
               "The judges require another 60 seconds. A proper Michelin review is never rushed, even for... this."}
+            {persona === "custom" &&
+              "The AI judges need about 60 more seconds to finish their deep review. Almost there..."}
           </div>
         )}
       </div>
