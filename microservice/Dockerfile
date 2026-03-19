@@ -1,6 +1,7 @@
 FROM node:20-slim
 
-# Install tessl CLI
+# Install git (needed by tessl to clone repos) and tessl CLI
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 RUN npm install -g tessl
 
 WORKDIR /app
