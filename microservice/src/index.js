@@ -41,6 +41,48 @@ function isValidGithubUrl(url) {
   return typeof url === "string" && GITHUB_URL_RE.test(url) && url.length < 500;
 }
 
+/**
+ * Parse a GitHub blob URL to extract repo root and skill name.
+ * e.g. https://github.com/owner/repo/blob/main/path/to/skills/my-skill/SKILL.md
+ *   → repoUrl: https://github.com/owner/repo
+ *   → skillName: my-skill (parent directory of SKILL.md)
+ *
+ * For repo root URLs (no blob path), returns just repoUrl with no skillName.
+ */
+function parseGithubUrl(url) {
+  const blobMatch = url.match(
+    /^(https:\/\/github\.com\/[^/]+\/[^/]+)\/blob\/[^/]+\/(.+)$/
+  );
+
+  if (blobMatch) {
+    const repoUrl = blobMatch[1];
+    const filePath = blobMatch[2];
+
+    // Extract skill name from the parent directory of SKILL.md
+    // e.g. "config/claude/skills/ab-test-setup/SKILL.md" → "ab-test-setup"
+    const parts = filePath.replace(/\/SKILL\.md$/i, "").split("/");
+    const skillName = parts[parts.length - 1];
+
+    return { repoUrl, skillName };
+  }
+
+  // Tree URL (similar to blob)
+  const treeMatch = url.match(
+    /^(https:\/\/github\.com\/[^/]+\/[^/]+)\/tree\/[^/]+\/(.+)$/
+  );
+
+  if (treeMatch) {
+    const repoUrl = treeMatch[1];
+    const dirPath = treeMatch[2];
+    const parts = dirPath.split("/");
+    const skillName = parts[parts.length - 1];
+    return { repoUrl, skillName };
+  }
+
+  // Plain repo URL
+  return { repoUrl: url, skillName: null };
+}
+
 // POST /review — run tessl skill review --json <url>
 app.post("/review", auth, (req, res) => {
   const { url } = req.body;
@@ -51,8 +93,19 @@ app.post("/review", auth, (req, res) => {
       .json({ error: "Invalid or missing GitHub URL." });
   }
 
+  const { repoUrl, skillName } = parseGithubUrl(url);
+
+  // Build tessl CLI args
+  const args = ["skill", "review", "--json"];
+  if (skillName) {
+    args.push("--skill", skillName);
+  }
+  args.push(repoUrl);
+
+  console.log(`Running: tessl ${args.join(" ")}`);
+
   // Spawn tessl CLI — pass URL as argument (never interpolated into shell)
-  const child = spawn("tessl", ["skill", "review", "--json", url], {
+  const child = spawn("tessl", args, {
     timeout: 120_000,
     env: { ...process.env },
   });
