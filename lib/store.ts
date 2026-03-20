@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { put, head } from "@vercel/blob";
 import { nanoid } from "nanoid";
 
 export interface SavedRoast {
@@ -17,8 +17,6 @@ export interface SavedRoast {
   createdAt: number;
 }
 
-const ROAST_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
-
 export async function saveRoast(
   data: Omit<SavedRoast, "id" | "createdAt">
 ): Promise<string> {
@@ -28,15 +26,26 @@ export async function saveRoast(
     id,
     createdAt: Date.now(),
   };
-  await kv.set(`roast:${id}`, JSON.stringify(roast), { ex: ROAST_TTL });
+
+  await put(`roasts/${id}.json`, JSON.stringify(roast), {
+    access: "public",
+    contentType: "application/json",
+  });
+
   return id;
 }
 
 export async function getRoast(id: string): Promise<SavedRoast | null> {
-  const data = await kv.get<string>(`roast:${id}`);
-  if (!data) return null;
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return null;
+
   try {
-    return typeof data === "string" ? JSON.parse(data) : data as unknown as SavedRoast;
+    const blob = await head(`roasts/${id}.json`);
+    if (!blob) return null;
+
+    const res = await fetch(blob.url);
+    if (!res.ok) return null;
+
+    return (await res.json()) as SavedRoast;
   } catch {
     return null;
   }
