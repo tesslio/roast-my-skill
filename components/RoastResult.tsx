@@ -256,12 +256,20 @@ export default function RoastResult({
       {/* Metrics dashboard */}
       {hasMetrics && (
         <div className="border p-5" style={{ borderColor: "var(--border)" }}>
-          <p
-            className="mb-4 text-xs font-bold uppercase tracking-widest"
-            style={{ color: "var(--text-dim)" }}
-          >
-            Skill Assessment
-          </p>
+          <div className="mb-4 flex items-center justify-between">
+            <p
+              className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Skill Assessment
+            </p>
+            <span
+              className="text-[10px] uppercase tracking-wider"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Evaluations by Tessl
+            </span>
+          </div>
 
           <div className="space-y-3">
             {[
@@ -294,7 +302,7 @@ export default function RoastResult({
                       </span>
                       <span
                         className="ml-2 text-[10px]"
-                        style={{ color: "var(--text-dim)" }}
+                        style={{ color: "var(--text-muted)" }}
                       >
                         {row.desc}
                       </span>
@@ -331,7 +339,7 @@ export default function RoastResult({
                   {m!.finalScore}
                   <span
                     className="text-sm font-normal"
-                    style={{ color: "var(--text-dim)" }}
+                    style={{ color: "var(--text-muted)" }}
                   >
                     %
                   </span>
@@ -348,7 +356,7 @@ export default function RoastResult({
             >
               <span
                 className="text-xs uppercase tracking-wider"
-                style={{ color: "var(--text-dim)" }}
+                style={{ color: "var(--text-muted)" }}
               >
                 Security
               </span>
