@@ -33,8 +33,10 @@ export default function Home() {
   const [rawReview, setRawReview] = useState<string | null>(null);
   const [skillFiles, setSkillFiles] = useState<SkillFile[]>([]);
   const [customDescription, setCustomDescription] = useState<string | null>(null);
+  const [roastId, setRoastId] = useState<string | null>(null);
 
   const reviewRef = useRef<string | null>(null);
+  const metricsRef = useRef<Metrics | null>(null);
   const pendingPersonaRef = useRef<Persona | null>(null);
   const waitingStartRef = useRef<number>(0);
   const customDescRef = useRef<string | null>(null);
@@ -69,6 +71,28 @@ export default function Home() {
         }
 
         setPhase("done");
+
+        // Save roast for permalink
+        try {
+          const saveRes = await fetch("/api/roast/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              persona,
+              customName: customDescRef.current,
+              metrics: metricsRef.current,
+              rawReview: reviewRef.current,
+              personaRoast: accumulated,
+            }),
+          });
+          if (saveRes.ok) {
+            const { id } = await saveRes.json();
+            setRoastId(id);
+            window.history.replaceState(null, "", `/r/${id}`);
+          }
+        } catch {
+          // Non-critical — permalink just won't be available
+        }
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Something went wrong."
@@ -121,6 +145,7 @@ export default function Home() {
       }
 
       reviewRef.current = data.review;
+      metricsRef.current = data.metrics ?? null;
       setMetrics(data.metrics ?? null);
       setRawReview(data.review ?? null);
       setReviewReady(true);
@@ -178,9 +203,12 @@ export default function Home() {
     setRawReview(null);
     setSkillFiles([]);
     setCustomDescription(null);
+    setRoastId(null);
     reviewRef.current = null;
+    metricsRef.current = null;
     pendingPersonaRef.current = null;
     customDescRef.current = null;
+    window.history.replaceState(null, "", "/");
   };
 
   return (
@@ -234,7 +262,7 @@ export default function Home() {
             <p
               className="animate-fade-up mt-4 text-center text-sm"
               style={{
-                color: "var(--text-muted)",
+                color: "var(--text)",
                 animationDelay: "0.2s",
                 opacity: 0,
               }}
@@ -309,12 +337,29 @@ export default function Home() {
               onPick={handlePersonaPick}
               reviewReady={reviewReady}
             />
+            <button
+              onClick={handleReset}
+              className="mt-6 text-xs uppercase tracking-wider transition-colors hover:text-white"
+              style={{ color: "var(--text-dim)" }}
+            >
+              ← Back
+            </button>
           </div>
         )}
 
         {/* ===== WAITING ===== */}
         {phase === "waiting" && selectedPersona && (
-          <WaitingScreen persona={selectedPersona} customDescription={customDescription} />
+          <WaitingScreen
+            persona={selectedPersona}
+            customDescription={customDescription}
+            onBack={() => {
+              setSelectedPersona(null);
+              setCustomDescription(null);
+              customDescRef.current = null;
+              pendingPersonaRef.current = null;
+              setPhase("picking");
+            }}
+          />
         )}
 
         {/* ===== RESULT ===== */}
@@ -375,10 +420,13 @@ export default function Home() {
                     >
                       Copy roast
                     </button>
+                    {roastId && (
+                      <CopyLinkButton roastId={roastId} />
+                    )}
                   </div>
 
                   {/* Share */}
-                  <ShareBar persona={selectedPersona} metrics={metrics} roastText={result} customName={customDescription ?? undefined} />
+                  <ShareBar persona={selectedPersona} metrics={metrics} roastText={result} customName={customDescription ?? undefined} roastId={roastId} />
                 </>
               )}
             </div>
@@ -389,7 +437,7 @@ export default function Home() {
   );
 }
 
-function ShareBar({ persona, metrics, roastText, customName }: { persona: Persona | null; metrics: Metrics | null; roastText: string; customName?: string }) {
+function ShareBar({ persona, metrics, roastText, customName, roastId }: { persona: Persona | null; metrics: Metrics | null; roastText: string; customName?: string; roastId?: string | null }) {
   const personaName =
     persona === "custom" && customName
       ? customName
@@ -419,7 +467,10 @@ function ShareBar({ persona, metrics, roastText, customName }: { persona: Person
   ].filter(Boolean).join(" ");
 
   const text = encodeURIComponent(tweetParts);
-  const url = encodeURIComponent("https://roast-my-skill.vercel.app");
+  const siteUrl = roastId
+    ? `https://roast-my-skill.vercel.app/r/${roastId}`
+    : "https://roast-my-skill.vercel.app";
+  const url = encodeURIComponent(siteUrl);
 
   // LinkedIn only supports URL (it pulls OG tags), so we use a text-based share for platforms that support it
   const shareText = [
@@ -427,7 +478,7 @@ function ShareBar({ persona, metrics, roastText, customName }: { persona: Person
     scoreText ? `\n\n${scoreText}` : "",
     breakdown ? ` (${breakdown})` : "",
     funnyLine ? `\n\n${funnyLine}` : "",
-    `\n\nhttps://roast-my-skill.vercel.app`,
+    `\n\n${siteUrl}`,
   ].filter(Boolean).join("");
 
   const encodedShareText = encodeURIComponent(shareText);
@@ -535,7 +586,7 @@ const WAITING_LINES: Record<string, string[]> = {
   ],
 };
 
-function WaitingScreen({ persona, customDescription }: { persona: Persona; customDescription?: string | null }) {
+function WaitingScreen({ persona, customDescription, onBack }: { persona: Persona; customDescription?: string | null; onBack: () => void }) {
   const [visibleLines, setVisibleLines] = useState<number>(1);
   const [showHangTight, setShowHangTight] = useState(false);
   const lines = WAITING_LINES[persona] ?? WAITING_LINES.engineer;
@@ -659,8 +710,38 @@ function WaitingScreen({ persona, customDescription }: { persona: Persona; custo
               "The AI judges need about 60 more seconds to finish their deep review. Almost there..."}
           </div>
         )}
+
+        <button
+          onClick={onBack}
+          className="mt-4 text-xs uppercase tracking-wider transition-colors hover:text-white"
+          style={{ color: "var(--text-dim)" }}
+        >
+          ← Pick a different roaster
+        </button>
       </div>
     </div>
+  );
+}
+
+function CopyLinkButton({ roastId }: { roastId: string }) {
+  const [copied, setCopied] = useState(false);
+  const link = `https://roast-my-skill.vercel.app/r/${roastId}`;
+
+  return (
+    <button
+      onClick={async () => {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="border px-4 py-2 text-xs uppercase tracking-wider transition-colors hover:bg-[var(--bg-surface)] hover:text-white"
+      style={{
+        borderColor: "var(--border)",
+        color: "var(--text-muted)",
+      }}
+    >
+      {copied ? "Link copied" : "Copy link"}
+    </button>
   );
 }
 
