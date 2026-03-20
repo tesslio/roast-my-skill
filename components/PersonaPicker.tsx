@@ -34,12 +34,13 @@ const PERSONAS: {
     image: "/parisian.png",
     color: "var(--parisian)",
   },
-  {
-    id: "custom",
-    name: "Create Your Own",
-    image: null,
-    color: "var(--custom)",
-  },
+  // Custom persona hidden for now — code preserved in lib/personas.ts
+  // {
+  //   id: "custom",
+  //   name: "Create Your Own",
+  //   image: null,
+  //   color: "var(--custom)",
+  // },
 ];
 
 export default function PersonaPicker({
@@ -103,7 +104,7 @@ export default function PersonaPicker({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
+      <div className="grid grid-cols-3 gap-3 md:gap-4">
         {PERSONAS.map((persona, i) => {
           const isSelected = selectedId === persona.id;
           const isDimmed = selectedId !== null && !isSelected;
