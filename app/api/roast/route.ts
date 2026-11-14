@@ -12,14 +12,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { type: string; content: string };
+  let body: unknown;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { content } = body;
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const { content } = body as Record<string, unknown>;
   if (!content || typeof content !== "string") {
     return NextResponse.json({ error: "Missing content." }, { status: 400 });
   }
