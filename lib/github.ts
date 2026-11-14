@@ -1,5 +1,9 @@
 const GITHUB_URL_PATTERN =
-  /^https:\/\/github\.com\/([^/]+)\/([^/]+)(?:\/(?:blob|tree)\/([^/]+)\/(.+))?$/;
+  /^\/([^/]+)\/([^/]+)(?:\/(?:blob|tree)\/([^/]+)\/(.+))?$/;
+
+function encodePath(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
 
 export interface SkillFileEntry {
   path: string;
@@ -12,11 +16,21 @@ export interface SkillFileEntry {
 export function parseGitHubUrl(
   url: string
 ): { owner: string; repo: string; branch?: string; path?: string } | null {
-  const trimmed = url.trim().replace(/\/$/, "");
-  const match = trimmed.match(GITHUB_URL_PATTERN);
-  if (!match) return null;
-  const [, owner, repo, branch, path] = match;
-  return { owner, repo, branch: branch || undefined, path: path || undefined };
+  try {
+    const parsed = new URL(url.trim());
+    if (parsed.origin !== "https://github.com" || parsed.username || parsed.password) return null;
+    const match = parsed.pathname.replace(/\/$/, "").match(GITHUB_URL_PATTERN);
+    if (!match) return null;
+    const [, owner, repo, branch, path] = match;
+    return {
+      owner: decodeURIComponent(owner),
+      repo: decodeURIComponent(repo),
+      branch: branch ? decodeURIComponent(branch) : undefined,
+      path: path ? decodeURIComponent(path) : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -27,28 +41,36 @@ export async function findSkillFiles(
   owner: string,
   repo: string
 ): Promise<SkillFileEntry[]> {
-  for (const branch of ["main", "master"]) {
-    const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
-    const res = await fetch(treeUrl, {
-      headers: { Accept: "application/vnd.github.v3+json" },
-    });
-    if (!res.ok) continue;
-
-    const data = await res.json();
-    const skillFiles: SkillFileEntry[] = (data.tree ?? [])
-      .filter(
-        (item: { path: string; type: string }) =>
-          item.type === "blob" && /(?:^|\/)(SKILL|skill)\.md$/i.test(item.path)
-      )
-      .map((item: { path: string }) => ({
-        path: item.path,
-        url: `https://github.com/${owner}/${repo}/blob/${branch}/${item.path}`,
-      }));
-
-    if (skillFiles.length > 0) return skillFiles;
+  const repositoryUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+  const repositoryResponse = await fetch(repositoryUrl, {
+    headers: { Accept: "application/vnd.github.v3+json" },
+  });
+  if (!repositoryResponse.ok) {
+    throw new Error(`Failed to read GitHub repository (HTTP ${repositoryResponse.status}).`);
+  }
+  const repository = await repositoryResponse.json();
+  const branch = repository.default_branch;
+  if (typeof branch !== "string" || !branch) {
+    throw new Error("GitHub repository has no default branch.");
+  }
+  const treeUrl = `${repositoryUrl}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
+  const res = await fetch(treeUrl, {
+    headers: { Accept: "application/vnd.github.v3+json" },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to list GitHub repository files (HTTP ${res.status}).`);
   }
 
-  return [];
+  const data = await res.json();
+  return (data.tree ?? [])
+    .filter(
+      (item: { path: string; type: string }) =>
+        item.type === "blob" && /(?:^|\/)(SKILL|skill)\.md$/i.test(item.path)
+    )
+    .map((item: { path: string }) => ({
+      path: item.path,
+      url: `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/blob/${encodeURIComponent(branch)}/${encodePath(item.path)}`,
+    }));
 }
 
 /**
@@ -60,7 +82,7 @@ export async function fetchFileFromGitHub(
   branch: string,
   path: string
 ): Promise<string> {
-  const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+  const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${encodePath(path)}`;
   const res = await fetch(rawUrl);
   if (!res.ok) {
     throw new Error(`Failed to fetch file from GitHub (HTTP ${res.status}).`);
@@ -104,16 +126,15 @@ export async function fetchSkillFromGitHub(
 
   if (skillFiles.length === 0) {
     throw new Error(
-      "No SKILL.md files found in this repository (searched main and master branches)."
+      "No SKILL.md files found on this repository's default branch."
     );
   }
 
   if (skillFiles.length === 1) {
     // Only one — fetch it directly
     const file = skillFiles[0];
-    const branchMatch = file.url.match(/\/blob\/([^/]+)\//);
-    const fileBranch = branchMatch?.[1] ?? "main";
-    const content = await fetchFileFromGitHub(owner, repo, fileBranch, file.path);
+    const fileUrl = parseGitHubUrl(file.url)!;
+    const content = await fetchFileFromGitHub(owner, repo, fileUrl.branch!, fileUrl.path!);
     return { content, skillFiles: null };
   }
 
@@ -122,5 +143,5 @@ export async function fetchSkillFromGitHub(
 }
 
 export function isGitHubUrl(input: string): boolean {
-  return GITHUB_URL_PATTERN.test(input.trim().replace(/\/$/, ""));
+  return parseGitHubUrl(input) !== null;
 }

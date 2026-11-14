@@ -22,6 +22,15 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Learn More
 
+GitHub file lookup regression tests use Node's built-in test runner and TypeScript
+stripping (validated with Node 24):
+
+```bash
+node --experimental-strip-types --test lib/github.test.mjs
+```
+
+The tests mock GitHub responses and do not require API keys.
+
 To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
